@@ -536,7 +536,7 @@ The WAVEFORM view confirms correct memory store, recall, and arithmetic operatio
  
     ----
 
-#RV DAY 4 - BASIC RISC-V CPU MICROARCHITECTURE
+# RV_DAY 4 - BASIC RISC-V CPU MICROARCHITECTURE
 
 # RV_D4SK2_L2_Labs: RISC-V CPU Microarchitecture - Pipelined Calculator with Memory Array
 
