@@ -466,3 +466,70 @@ The WAVEFORM view confirms multi-cycle pipeline behavior and signal propagation:
   * At stage `@3`, `$overflow` dynamically evaluates and merges into `@3$err3`.
   * The error bit traverses stages `@4$err4` and `@5$err5` unhindered, arriving at stage `@6$err6` along with the `@6$div_zero` evaluation.
 * **Randomized Testing:** `$rand1[3:0]` and `$rand2[3:0]` drive continuous data vectors through the pipeline every cycle without stalling the datapath.
+
+  ----
+
+# RV_D3SK4_L5_Labs: Calculator with Single-Value Memory
+
+A single-value memory element in a pipelined calculator allows the circuit to persist calculation results across multiple execution cycles. Incorporating a memory register and recall mechanism enables multi-step arithmetic workflows without needing external data storage.
+
+In Transaction-Level Verilog (TL-Verilog), single-value memory is implemented by extending the opcode control path and using feedback retiming (`>>2`) to dynamically hold or update state across pipeline stages.
+
+---
+
+## Architecture & Design Implementation
+
+![Calculator Memory Architecture](./assets/day3/calc_memory_arch.jpg)
+
+### Extended Opcode & Control Logic
+The operation signal `$op` is expanded from 2 bits to 3 bits (`$op[2:0]`) to accommodate memory instructions alongside standard arithmetic operations:
+
+* **`3'b000` (0):** Addition (`$sum`)
+* **`3'b001` (1):** Subtraction (`$diff`)
+* **`3'b010` (2):** Multiplication (`$prod`)
+* **`3'b011` (3):** Division (`$quot`)
+* **`3'b100` (4):** Memory Recall (Selects stored `$mem` value into `$out`)
+* **`3'b101` (5):** Memory Store (Captures current calculated value into `$mem`)
+
+### Memory & Pipeline Stage Breakdown
+
+* **Stage 0 (`@0`) — Control & Reset Setup:**
+  * `$valid`: Validates active execution cycles (`>>1$cnt`).
+  * `$valid_or_reset`: Gating signal ensuring safe operation during reset transitions (`$valid || $reset`).
+
+* **Stage 1 (`@1`) — Parallel Arithmetic Computation:**
+  * `$sum[31:0] = $val1 + $val2`: Computes addition.
+  * `$diff[31:0] = $val1 - $val2`: Computes subtraction.
+  * `$prod[31:0] = $val1 * $val2`: Computes product.
+  * `$quot[31:0] = $val2 ? ($val1 / $val2) : 32'b0`: Computes division with divide-by-zero protection.
+
+* **Stage 2 (`@2`) — Output Selection & Memory Multiplexing:**
+  * **Output MUX (`$out[31:0]`):** Decodes `$op[2:0]` to select between arithmetic results (`$sum`, `$diff`, `$prod`, `$quot`), the memory recall value, or defaults to `32'b0` on `$reset`.
+  * **Memory Register (`$mem[31:0]`):** Implements single-value state retention using retimed feedback (`>>2`). When `$op == 3'b101` (Store), `$mem` updates with the current output; otherwise, it retains its previous state (`>>2$mem`).
+
+---
+
+## Visual Diagram Breakdown
+
+![Calculator Diagram](./assets/day3/calc_memory_diagram.jpg)
+
+The Makerchip DIAGRAM view represents the physical layout across the `|calc` pipeline hierarchy:
+
+* **Stage `@0` Box:** Contains reset and pipeline validity control gating (`$valid_or_reset`).
+* **Stage `@1` Box:** Houses the parallel arithmetic execution blocks (`$sum`, `$diff`, `$prod`, `$quot`).
+* **Stage `@2` Box:** Houses the extended multiplexer logic for `$out` and the memory holding register `$mem`, showcasing the retimed feedback loops (`>>2`) spanning across stage boundaries.
+
+---
+
+## Waveform Analysis & Signal Verification
+
+![Calculator Waveform](./assets/day3/calc_memory_wave.jpg)
+
+The WAVEFORM view confirms correct memory store, recall, and arithmetic operation:
+
+* **Synchronous Reset:** While `$reset` is active high, output vectors (`$out`, `$sum`, `$diff`, etc.) remain zeroed (`32'h0000_0000`).
+* **Arithmetic Execution:** As `$op` cycles through `3'b000` to `3'b011`, `$out` dynamically updates with computed results based on valid inputs `$val1` and `$val2`.
+* **Memory Store & Recall Dynamics:**
+  * When `$op` equals `3'b101` (Store), the corresponding output value is latched into `$mem`.
+  * Subsequent cycles maintaining non-store operations keep `$mem` stable without data corruption.
+  * When `$op` equals `3'b100` (Recall), `$out` instantly reflects the previously stored memory value regardless of current inputs `$val1` and `$val2`.
