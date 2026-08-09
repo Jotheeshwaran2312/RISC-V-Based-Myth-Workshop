@@ -21,41 +21,41 @@ The workshop outlines the complete open-source chip design flow, illustrating th
 
 ---
 
----
-
 ## RV Day 3 - Combinational Logic
 
-### RV_D3SK1 - Labs
+### RV_D3SK1 - Digital Logic Design
 
-#### RV_D3SK1_L3_Labs - Combinational Logic
+#### RV_D3SK1_L3 - Combinational Logic Lab
 
-The laboratory exercise focuses on the implementation of a **combinational calculator** using **TL-Verilog and the Makerchip IDE**.
+This laboratory exercise focuses on designing and verifying a combinational calculator using TL-Verilog in the Makerchip IDE.
 
-The calculator accepts two input values and performs four arithmetic operations:
+The design demonstrates how two input values can be processed using four basic arithmetic operations:
 
 - Addition
 - Subtraction
 - Multiplication
 - Division
 
-The required operation is selected using a **2-bit encoded operation signal**.
+The operation is selected using a 2-bit encoded control signal `$op[1:0]`.
 
 ---
 
-##### 1. Combinational Calculator - Lab Specification
+### 1. Combinational Calculator Specification
 
 The first image shows the laboratory specification for the combinational calculator.
 
-The circuit contains two 32-bit input values, `$val1[31:0]` and `$val2[31:0]`, which are supplied to four arithmetic blocks:
+The calculator accepts two 32-bit input operands, `$val1[31:0]` and `$val2[31:0]`, and produces a 32-bit output `$out[31:0]`.
 
-- Addition
-- Subtraction
-- Multiplication
-- Division
+Four arithmetic operations are implemented in parallel:
 
-Each arithmetic block produces an individual result. The 2-bit `$op[1:0]` signal is used as an encoded select input to choose one of these results and drive the final `$out[31:0]`.
+- `$sum` - Addition
+- `$diff` - Subtraction
+- `$prod` - Multiplication
+- `$quot` - Division
 
-The operation encoding is:
+The `$op[1:0]` signal selects which arithmetic result is connected to the final output.
+
+#### Operation Encoding
 
 | `$op[1:0]` | Operation |
 |------------|-----------|
@@ -64,30 +64,11 @@ The operation encoding is:
 | `2'b10` | Multiplication |
 | `2'b11` | Division |
 
-![Combinational Calculator](assets/day3/day3_combinational_calculator.png)
+The division operation includes a zero-divisor check to avoid invalid division.
 
-*Figure 1: RV_D3SK1_L3 laboratory specification showing the architecture of the combinational calculator.*
+```text
+$op = 2'b00  →  $out = $val1 + $val2
+$op = 2'b01  →  $out = $val1 - $val2
+$op = 2'b10  →  $out = $val1 * $val2
+$op = 2'b11  →  $out = $val1 / $val2
 
----
-
-##### 2. Makerchip IDE
-
-The second image shows the **Makerchip IDE** used to implement and simulate the design.
-
-Makerchip provides an interactive environment for developing Verilog and TL-Verilog designs and visualizing their simulation behavior. The design can be edited, compiled and inspected using the diagram and waveform views.
-
-![Makerchip IDE](assets/day3/day3_makerchip_ide.png)
-
-*Figure 2: Makerchip IDE environment used for implementing and simulating the combinational calculator.*
-
----
-
-##### 3. TL-Verilog Implementation
-
-The third image shows the TL-Verilog implementation of the calculator.
-
-The input values are generated using small 4-bit random values and assigned to 32-bit signals:
-
-```tlv
-$val1[31:0] = $rand1[3:0];
-$val2[31:0] = $rand2[3:0];
