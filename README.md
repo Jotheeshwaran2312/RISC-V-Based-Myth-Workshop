@@ -479,7 +479,7 @@ In Transaction-Level Verilog (TL-Verilog), single-value memory is implemented by
 
 ## Architecture & Design Implementation
 
-![Calculator Memory Architecture](./assets/day3/calc_memory_arch.jpg)
+![Calculator Memory Architecture](./assets/day3/calc_memory_arch.jpeg)
 
 ### Extended Opcode & Control Logic
 The operation signal `$op` is expanded from 2 bits to 3 bits (`$op[2:0]`) to accommodate memory instructions alongside standard arithmetic operations:
@@ -511,7 +511,7 @@ The operation signal `$op` is expanded from 2 bits to 3 bits (`$op[2:0]`) to acc
 
 ## Visual Diagram Breakdown
 
-![Calculator Diagram](./assets/day3/calc_memory_diagram.jpg)
+![Calculator Diagram](./assets/day3/calc_memory_diagram.jpeg)
 
 The Makerchip DIAGRAM view represents the physical layout across the `|calc` pipeline hierarchy:
 
@@ -523,7 +523,7 @@ The Makerchip DIAGRAM view represents the physical layout across the `|calc` pip
 
 ## Waveform Analysis & Signal Verification
 
-![Calculator Waveform](./assets/day3/calc_memory_wave.jpg)
+![Calculator Waveform](./assets/day3/calc_memory_wave.jpeg)
 
 The WAVEFORM view confirms correct memory store, recall, and arithmetic operation:
 
