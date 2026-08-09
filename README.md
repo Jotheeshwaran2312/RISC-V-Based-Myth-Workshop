@@ -407,3 +407,62 @@ The design performs parallel calculations inside the `|calc` pipeline scope at s
          *failed = 1'b0;
 \SV
    endmodule
+```
+------
+
+# RV_D3SK3_L3_labs: Pipelined Logic in TL-Verilog
+
+Pipelining breaks down complex combinational logic into smaller computational stages separated by sequential registers (flip-flops). This maximizes clock frequency ($F_{max}$) and overall throughput by processing multiple instructions or data transactions concurrently across consecutive clock cycles. 
+
+In Transaction-Level Verilog (TL-Verilog), pipelining is represented natively using scope stages (`@stage_number`) and retiming operators (`>>stage_count`), eliminating the manual overhead of instantiating pipeline registers.
+
+---
+
+## Pipeline Architecture & RTL Implementation
+
+![Pipeline Diagram](./assets/day3/day3_pipiline.jpeg)
+
+### Design & Code Structure
+The logic is structured inside a 6-stage pipeline (`|comp`) that checks for mathematical validity and arithmetic errors across sequential stages:
+
+* **Stage 1 (`@1`) — Input Validation:**
+  * `$aa`, `$bb`: 4-bit pseudo-random inputs from `$rand1` and `$rand2`.
+  * `$bad_input`: Asserts if `$aa > 9`.
+  * `$illegal_op`: Asserts if `$bb > 9`.
+  * `$err1`: Combined input error flag (`$bad_input || $illegal_op`).
+
+* **Stage 2 (`@2`) — Error Propagation:**
+  * `$err2 = >>1$err1`: Retimes `$err1` from cycle 1 into cycle 2 using a 1-cycle delay operator (`>>1`).
+
+* **Stage 3 (`@3`) — Addition & Overflow Check:**
+  * `$cc = $aa + $bb`: Computes the sum of inputs.
+  * `$overflow`: Asserts if `$cc > 15`.
+  * `$err3`: Accumulates previous error stage (`$err2`) with current stage overflow (`$err3 = >>1$err2 || $overflow`).
+
+* **Stages 4 & 5 (`@4` & `@5`) — Retiming Pipeline:**
+  * `$err4`, `$err5`: Pass the accumulated error signal sequentially down the pipeline (`>>1$err3`, `>>1$err4`).
+
+* **Stage 6 (`@6`) — Division by Zero Check & Final Flags:**
+  * `$dd` / `$div_zero`: Asserts if `$bb == 0`.
+  * `$err6`: Computes final error status combining cycle 5 error with division-by-zero flag (`$err6 = >>1$err5 || $div_zero`).
+
+### Visual Diagram Breakdown
+The Makerchip DIAGRAM view illustrates the hierarchy under `/top`:
+* **Pipeline Boundary (`|comp`):** Encapsulates the entire multi-cycle datapath.
+* **Stage Blocks (`@1` to `@6`):** Highlight computational units separated by vertical register interfaces. TL-Verilog automatically infers and instantiates the internal D flip-flops between adjacent stage boundaries.
+
+---
+
+## Waveform Analysis & Signal Verification
+
+![Pipeline Waveform](./assets/day3/day3_pipe_wave.jpeg)
+
+The WAVEFORM view confirms multi-cycle pipeline behavior and signal propagation:
+
+* **Clock & Reset Dynamics:** Simulation runs under `clk` while `reset` transitions low to enable pipeline operation.
+* **Cycle Latency:** Signals evaluated at stage `@1` (such as `$aa`, `$bb`, and `$err1`) advance through sequential clock cycles.
+* **Error Escalation Wavefront:**
+  * An error generated at stage `@1$err1` shifts into `@2$err2` on the following clock cycle.
+  * At stage `@3`, `$overflow` dynamically evaluates and merges into `@3$err3`.
+  * The error bit traverses stages `@4$err4` and `@5$err5` unhindered, arriving at stage `@6$err6` along with the `@6$div_zero` evaluation.
+* **Randomized Testing:** `$rand1[3:0]` and `$rand2[3:0]` drive continuous data vectors through the pipeline every cycle without stalling the datapath.
