@@ -536,6 +536,8 @@ The WAVEFORM view confirms correct memory store, recall, and arithmetic operatio
  
     ----
 
+#RV DAY 4 - BASIC RISC-V CPU MICROARCHITECTURE
+
 # RV_D4SK2_L2_Labs: RISC-V CPU Microarchitecture - Pipelined Calculator with Memory Array
 
 Building scalable CPU microarchitectures requires integrating storage structures directly within the execution pipeline. In this lab, the single-value memory calculator is upgraded to a multi-slot, addressable 2D memory array (`/mem_array[7:0]`). This layout mirrors register file and data cache structures used in RISC-V core designs.
