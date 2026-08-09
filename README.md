@@ -22,7 +22,7 @@ The workshop outlines the complete open-source chip design flow, illustrating th
 ---
 
 
-## RV Day 3
+## RV Day 3 - Digital Logic with TL- verilog code
 
 ### RV_D3SK1 - Digital Logic Design
 
