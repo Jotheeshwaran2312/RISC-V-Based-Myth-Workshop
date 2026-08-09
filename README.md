@@ -320,3 +320,90 @@ This indicates successful completion of the laboratory simulation.
 *Figure 4: Simulation waveform showing the calculator inputs, arithmetic results, operation selector, and final output during verification.*
 
 ---
+
+## RV_D3SK1_L3_Labs - Combinational Logic
+
+### RV_D3SK1_L3_Labs - Combinational Logic Laboratory
+
+This laboratory focuses on the implementation and verification of combinational logic using a hardware description language and the Makerchip IDE. The laboratory demonstrates how mathematical operations can be converted into RTL logic, simulated, visualized, and verified.
+
+---
+
+### 1. Combinational Calculator Specification
+
+The first image shows the **Combinational Calculator** laboratory specification and architecture.
+
+The circuit implements four arithmetic operations on two input values:
+
+- Addition
+- Subtraction
+- Multiplication
+- Division
+
+The operation is selected using the 2-bit control signal `$op[1:0]`.
+
+| `$op[1:0]` | Operation |
+|------------|-----------|
+| `2'b00` | Addition (`$sum`) |
+| `2'b01` | Subtraction (`$diff`) |
+| `2'b10` | Multiplication (`$prod`) |
+| `2 me/b11` | Division (`$quot`) |
+
+The inputs `$val1[31:0]` and `$val2[31:0]` are zero-extended from 4-bit random values (`$rand1[3:0]`, `$rand2[3:0]`) to keep simulation values small and easy to verify. A 4-to-1 multiplexer selects the required output `$out[31:0]` based on `$op[1:0]`.
+
+![Combinational Calculator Specification](./assets/day3/day3_combi_calci.jpeg)
+
+*Figure 1: RV_D3SK1_L3 combinational calculator specification showing arithmetic operations and encoded operation selection.*
+
+---
+
+### 2. Simulation Waveform Verification
+
+The second image shows the **simulation waveform viewer** within the Makerchip IDE.
+
+The waveform displays signal transitions across clock cycles (`clk`). As `$rand1`, `$rand2`, and `$op` change over time, intermediate signals (`$sum`, `$diff`, `$prod`, `$quot`) update concurrently. The viewer verifies that `$out` synchronously matches the selected mathematical result for each input vector.
+
+![Simulation Waveforms](./assets/day3/day3_wave.jpeg)
+
+*Figure 2: Cycle-by-cycle simulation waveform verifying the combinational calculator output signals.*
+
+---
+
+### 3. Combinational Logic Diagram
+
+The third image shows the generated **hardware architecture and logic diagram**.
+
+The Makerchip **DIAGRAM** tab generates the structural hierarchy inside `/top` -> `|calc` at stage `@0`. The two inputs feed into the four parallel arithmetic blocks, and their results route into the central multiplexer block driving `$out`.
+
+This visualization illustrates how the high-level TL-Verilog code translates into structural hardware elements.
+
+![Combinational Logic Diagram](./assets/day3/day3_hard.jpeg)
+
+*Figure 3: Generated hardware diagram showing the structural representation of the combinational logic.*
+
+---
+
+### 4. TL-Verilog Implementation
+
+The fourth image shows the **TL-Verilog source code** implementation in the Makerchip editor.
+
+The design performs parallel calculations inside the `|calc` pipeline scope at stage `@0` and selects the result using conditional multiplexer logic:
+
+```tlv
+\TLV
+   |calc
+      @0
+         $val1[31:0] =$rand1[3:0];
+         $val2[31:0] =$rand2[3:0];
+
+         $sum[31:0]  = $val1 +$val2;
+         $diff[31:0] = $val1 -$val2;
+         $prod[31:0] = $val1 * $val2;
+         $quot[31:0] =$val2 == 0 ? 32'd0 : $val1 / $val2;
+
+         $out[31:0]  =$op[1:0] == 2'b00 ? $sum  :$op[1:0] == 2'b01 ? $diff :$op[1:0] == 2'b10 ? $prod :$quot ;
+
+         *passed = *cyc_cnt > 40;
+         *failed = 1'b0;
+\SV
+   endmodule
