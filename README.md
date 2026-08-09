@@ -533,3 +533,62 @@ The WAVEFORM view confirms correct memory store, recall, and arithmetic operatio
   * When `$op` equals `3'b101` (Store), the corresponding output value is latched into `$mem`.
   * Subsequent cycles maintaining non-store operations keep `$mem` stable without data corruption.
   * When `$op` equals `3'b100` (Recall), `$out` instantly reflects the previously stored memory value regardless of current inputs `$val1` and `$val2`.
+ 
+    ----
+
+# RV_D4SK2_L2_Labs: RISC-V CPU Microarchitecture - Pipelined Calculator with Memory Array
+
+Building scalable CPU microarchitectures requires integrating storage structures directly within the execution pipeline. In this lab, the single-value memory calculator is upgraded to a multi-slot, addressable 2D memory array (`/mem_array[7:0]`). This layout mirrors register file and data cache structures used in RISC-V core designs.
+
+In Transaction-Level Verilog (TL-Verilog), hierarchical arrays and multi-stage pipelines are instantiated cleanly using macro definitions (`m4+solution`) and parametric array scopes, enabling modular verification and pipeline visualization.
+
+---
+
+## Architecture & Design Implementation
+
+![RISC-V Calculator Diagram](assets/day4/riscv_calc_mem_diagram.jpeg)
+
+### Macro Configuration & Code Structure
+The top-level testbench leverages Makerchip M4 macros to configure the target design lab (Slide 100 solution):
+
+* **`m4_define(['M4_CALCULATOR'], 1)`:** Configures the macro environment to synthesize the advanced pipelined calculator with memory array support.
+* **`m4_define(['M4_SLIDE_NUM'], 100)`:** Binds the internal pipeline stage connections to reference solution slide 100.
+* **`m4+cpu_viz(@4)`:** Enables dynamic visual representation of the execution pipeline up to stage `@4`.
+
+### Pipeline & Memory Array Hierarchy
+
+* **Stage 0 (`@0`) — Gating & Reset Control:**
+  * Establishes validity signals (`$valid`) and reset OR logic (`$reset_or_valid`) to ensure safe data flow across clock domain transitions.
+
+* **Stage 1 (`@1`) — Parallel ALU Execution & Address Decoding:**
+  * **ALU Core:** Concurrently evaluates primary arithmetic functions (`$sum`, `$diff`, `$prod`, `$quot`).
+  * **Memory Sub-Hierarchy (`/mem_array[7:0]`):** Instantiates an 8-entry addressable memory array. Each entry manages its own write-enable flag (`$wr`) and array value (`$value`) across `@1` and `@2`.
+
+* **Stage 2 (`@2`) — Multiplexing & Memory Access:**
+  * Decodes the extended opcode (`$op`) to route standard ALU output, memory store operations, or indexed memory recall values directly to `$out`.
+
+* **Stages 3 & 4 (`@3` & `@4`) — Writeback & Visualization Pipeline:**
+  * Delays and registers calculated outputs to feed the CPU visualizer pipeline (`m4+cpu_viz(@4)`), laying the foundation for multi-stage RISC-V instruction commit logic.
+
+---
+
+## Visual Diagram Breakdown
+
+The Makerchip DIAGRAM view illustrates the hierarchical design under `/top`:
+
+* **Pipeline Boundary (`|calc`):** Wraps stages `@0` through `@4`, showing inter-stage retiming registers that propagate computed data down the pipeline.
+* **Indexed Array Scope (`/mem_array[7:0]`):** Renders a dedicated sub-block connected to the main execution stage. It highlights individual write lines (`$wr`) and register slots (`$value`) directly interacting with the `@1` and `@2` pipeline stages.
+
+---
+
+## Waveform Analysis & Signal Verification
+
+![RISC-V Calculator Waveform](assets/day4/riscv_calc_mem_wave.jpeg)
+
+The WAVEFORM view confirms correct operation across both the main execution pipe and the memory array:
+
+* **Pipeline Synchronization:** Operational signals (`$val1`, `$val2`, `$op`, `$sum`, `$diff`, `$prod`, `$quot`, `$out`) transition in sync with `clk` while respecting `$reset_or_valid`.
+* **Memory Array Writes (`/mem_array[*]`):**
+  * Individual array entries (`/mem_array[0]` through `/mem_array[3]`) reflect targeted write pulses on `$wr`.
+  * When a write instruction targets a specific memory index, its corresponding `$value` signal updates cleanly on the clock edge while other entries maintain state.
+* **Data Recall Integrity:** Memory recall operations read directly from the targeted `/mem_array[index]` entry, forwarding the stored value into `$out` without pipeline stalls.
