@@ -28,7 +28,7 @@ The workshop outlines the complete open-source chip design flow, illustrating th
 
 ### RV_D3SK1_L2 - Labs for sequential calculator
 
-This laboratory exercise focuses on the design and verification of a **combinational calculator** using **TL-Verilog** in the **Makerchip IDE**.
+This laboratory exercise focuses on the design and verification of a **sequentail calculator** using **TL-Verilog** in the **Makerchip IDE**.
 
 The calculator accepts two input values and performs four basic arithmetic operations:
 
